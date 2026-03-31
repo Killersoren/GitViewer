@@ -1,4 +1,5 @@
 ﻿using GitViewer.Api.Dto;
+using GitViewer.Api.Services.Interfaces;
 using GitViewer.DataAccess.Models;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;

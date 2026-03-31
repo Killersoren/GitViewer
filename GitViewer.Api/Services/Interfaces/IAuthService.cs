@@ -1,7 +1,7 @@
 ﻿using GitViewer.Api.Dto;
 using GitViewer.DataAccess.Models;
 
-namespace GitViewer.Api.Services
+namespace GitViewer.Api.Services.Interfaces
 {
     public interface IAuthService
     {

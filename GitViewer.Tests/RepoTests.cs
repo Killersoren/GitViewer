@@ -2,7 +2,7 @@
 using GitViewer.Api;
 using GitViewer.Api.Controllers;
 using GitViewer.Api.Dto;
-using GitViewer.Api.Services;
+using GitViewer.Api.Services.Interfaces;
 using GitViewer.DataAccess.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -34,6 +34,7 @@ namespace GitViewer.Tests
             var mockRepositoryService = new Mock<IRepositoryService>();
             var mockGitFileService = new Mock<IGitFileService>();
             var mockGitRepoManager = new Mock<IGitRepoManager>();
+            var mockUserService = new Mock<IUserService>();
 
             var repo = new Repository
             {
@@ -49,10 +50,15 @@ namespace GitViewer.Tests
                 .Setup(x => x.GetRepoAsync(repo.Id, userId, It.IsAny<string>()))
                 .ReturnsAsync(Result.Ok(repo));
 
+            mockUserService
+                .Setup(x => x.TryGetOptionalUserId())
+                .Returns(userId);
+
             var controller = new RepoController(
                 mockRepositoryService.Object,
                 mockGitFileService.Object,
-                mockGitRepoManager.Object);
+                mockGitRepoManager.Object,
+                mockUserService.Object);
 
             var user = new ClaimsPrincipal(new ClaimsIdentity(new[]
             {
@@ -67,7 +73,7 @@ namespace GitViewer.Tests
             controller.ControllerContext.HttpContext.Connection.RemoteIpAddress = IPAddress.Loopback;
 
             // Act
-            var result = await controller.GetRepo(repo.Id);
+            var result = await controller.GetRepo(repo.Id, null);
 
             // Assert
             var okResult = Assert.IsType<OkObjectResult>(result.Result);
@@ -80,9 +86,11 @@ namespace GitViewer.Tests
         public async Task GetRepoTest_NotFound_Async()
         {
             // Arrange
+            var userId = Guid.NewGuid();
             var mockRepositoryService = new Mock<IRepositoryService>();
             var mockGitFileService = new Mock<IGitFileService>();
             var mockGitRepoManager = new Mock<IGitRepoManager>();
+            var mockUserService = new Mock<IUserService>();
 
             var nonExistentRepoId = Guid.NewGuid();
 
@@ -90,14 +98,19 @@ namespace GitViewer.Tests
                 .Setup(x => x.GetRepoAsync(nonExistentRepoId, It.IsAny<Guid?>(), It.IsAny<string>()))
                 .ReturnsAsync(Result.Fail("Repository not found"));
 
+            mockUserService
+                .Setup(x => x.TryGetOptionalUserId())
+                .Returns(userId);
+
             var controller = new RepoController(
                 mockRepositoryService.Object,
                 mockGitFileService.Object,
-                mockGitRepoManager.Object);
+                mockGitRepoManager.Object,
+                mockUserService.Object);
 
             var user = new ClaimsPrincipal(new ClaimsIdentity(new[]
             {
-                new Claim(ClaimTypes.NameIdentifier, Guid.NewGuid().ToString()),
+                new Claim(ClaimTypes.NameIdentifier, userId.ToString()),
                 new Claim(ClaimTypes.Role, "User")
             }, "mock"));
 
@@ -107,7 +120,7 @@ namespace GitViewer.Tests
             };
 
             // Act
-            var result = await controller.GetRepo(nonExistentRepoId);
+            var result = await controller.GetRepo(nonExistentRepoId, null);
 
             // Assert
             var notFoundResult = Assert.IsType<NotFoundObjectResult>(result.Result);
@@ -121,6 +134,7 @@ namespace GitViewer.Tests
             var mockRepositoryService = new Mock<IRepositoryService>();
             var mockGitFileService = new Mock<IGitFileService>();
             var mockGitRepoManager = new Mock<IGitRepoManager>();
+            var mockUserService = new Mock<IUserService>();
 
             var repoId = Guid.NewGuid();
 
@@ -128,10 +142,15 @@ namespace GitViewer.Tests
                 .Setup(x => x.GetRepoAsync(repoId, null, It.IsAny<string>()))
                 .ReturnsAsync(Result.Fail("Unauthorized"));
 
+            mockUserService
+                .Setup(x => x.TryGetOptionalUserId())
+                .Returns((Guid?)null);
+
             var controller = new RepoController(
                 mockRepositoryService.Object,
                 mockGitFileService.Object,
-                mockGitRepoManager.Object);
+                mockGitRepoManager.Object,
+                mockUserService.Object);
 
             controller.ControllerContext = new ControllerContext
             {
@@ -139,7 +158,7 @@ namespace GitViewer.Tests
             };
 
             // Act
-            var result = await controller.GetRepo(repoId);
+            var result = await controller.GetRepo(repoId, null);
 
             // Assert
             var unauthorizedResult = Assert.IsType<UnauthorizedResult>(result.Result);
@@ -154,6 +173,11 @@ namespace GitViewer.Tests
             var mockRepositoryService = new Mock<IRepositoryService>();
             var mockGitFileService = new Mock<IGitFileService>();
             var mockGitRepoManager = new Mock<IGitRepoManager>();
+            var mockUserService = new Mock<IUserService>();
+
+            mockUserService
+                .Setup(x => x.GetRequiredUserId())
+                .Returns(userId);
 
             var createRepoDto = new RepositoryDto
             {
@@ -174,10 +198,15 @@ namespace GitViewer.Tests
                 .Setup(x => x.AddRepoAsync(createRepoDto, userId))
                 .ReturnsAsync(Result.Ok(createdRepo));
 
+            mockUserService
+                .Setup(x => x.GetRequiredUserId())
+                .Returns(userId);
+
             var controller = new RepoController(
                 mockRepositoryService.Object,
                 mockGitFileService.Object,
-                mockGitRepoManager.Object);
+                mockGitRepoManager.Object,
+                mockUserService.Object);
 
             var user = new ClaimsPrincipal(new ClaimsIdentity(new[]
             {
@@ -209,6 +238,7 @@ namespace GitViewer.Tests
             var mockRepositoryService = new Mock<IRepositoryService>();
             var mockGitFileService = new Mock<IGitFileService>();
             var mockGitRepoManager = new Mock<IGitRepoManager>();
+            var mockUserService = new Mock<IUserService>();
 
             var invalidRepoDto = new RepositoryDto
             {
@@ -219,10 +249,15 @@ namespace GitViewer.Tests
                 .Setup(x => x.AddRepoAsync(invalidRepoDto, userId))
                 .ReturnsAsync(Result.Fail("Invalid URL format"));
 
+            mockUserService
+                .Setup(x => x.GetRequiredUserId())
+                .Returns(userId);
+
             var controller = new RepoController(
                 mockRepositoryService.Object,
                 mockGitFileService.Object,
-                mockGitRepoManager.Object);
+                mockGitRepoManager.Object,
+                mockUserService.Object);
 
             var user = new ClaimsPrincipal(new ClaimsIdentity(new[]
             {
@@ -252,15 +287,21 @@ namespace GitViewer.Tests
             var mockRepositoryService = new Mock<IRepositoryService>();
             var mockGitFileService = new Mock<IGitFileService>();
             var mockGitRepoManager = new Mock<IGitRepoManager>();
+            var mockUserService = new Mock<IUserService>();
 
             mockRepositoryService
                 .Setup(x => x.DeleteRepoAsync(repoId, userId))
                 .ReturnsAsync(Result.Ok());
 
+            mockUserService
+                .Setup(x => x.GetRequiredUserId())
+                .Returns(userId);
+
             var controller = new RepoController(
                 mockRepositoryService.Object,
                 mockGitFileService.Object,
-                mockGitRepoManager.Object);
+                mockGitRepoManager.Object,
+                mockUserService.Object);
 
             var user = new ClaimsPrincipal(new ClaimsIdentity(new[]
             {
@@ -290,15 +331,21 @@ namespace GitViewer.Tests
             var mockRepositoryService = new Mock<IRepositoryService>();
             var mockGitFileService = new Mock<IGitFileService>();
             var mockGitRepoManager = new Mock<IGitRepoManager>();
+            var mockUserService = new Mock<IUserService>();
 
             mockRepositoryService
                 .Setup(x => x.DeleteRepoAsync(repoId, userId))
                 .ReturnsAsync(Result.Fail("Repository not found"));
 
+            mockUserService
+                .Setup(x => x.GetRequiredUserId())
+                .Returns(userId);
+
             var controller = new RepoController(
                 mockRepositoryService.Object,
                 mockGitFileService.Object,
-                mockGitRepoManager.Object);
+                mockGitRepoManager.Object,
+                mockUserService.Object);
 
             var user = new ClaimsPrincipal(new ClaimsIdentity(new[]
             {

@@ -16,7 +16,8 @@ namespace GitViewer.Api.Helpers
                 UserId = logDto.UserId ?? Guid.Empty,
                 IsAnonymous = logDto.IsAnonymous,
                 Timestamp = logDto.Timestamp,
-                Details = logDto.Details
+                Details = logDto.Details,
+                ShareLink = logDto.ShareLink
             };
 
             return logMessage;

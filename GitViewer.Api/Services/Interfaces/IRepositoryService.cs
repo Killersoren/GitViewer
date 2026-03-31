@@ -2,7 +2,7 @@
 using GitViewer.Api.Dto;
 using GitViewer.DataAccess.Models;
 
-namespace GitViewer.Api.Services
+namespace GitViewer.Api.Services.Interfaces
 {
     public interface IRepositoryService
     {
@@ -14,5 +14,7 @@ namespace GitViewer.Api.Services
         Task<Result> DeleteRepoAsync(Guid repoId, Guid userId);
         Task<Result> TogglePublicAsync(Guid repoId, Guid userId, bool isPublic);
         Task<Result> CloneRepoAsync(Guid repoId, Guid userId, bool useSsh = true);
+        Task<Result<IAsyncEnumerable<Repository>>> GetUserReposFromShareLinkAsync(Guid shareLinkId, Guid? requesterId, string clientIp);
+        Task<Result<Repository>> GetRepoAsyncWithShareLink(Guid repoId, Guid value, Guid? requesterId, string clientIp);
     }
 }

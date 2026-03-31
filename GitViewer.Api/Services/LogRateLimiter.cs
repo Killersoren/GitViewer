@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Caching.Memory;
+﻿using GitViewer.Api.Services.Interfaces;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace GitViewer.Api.Services
 {

@@ -1,8 +1,7 @@
-using FluentResults;
 using GitViewer.Api.Controllers;
 using GitViewer.Api.Dto;
 using GitViewer.Api.RabbitMQ;
-using GitViewer.Api.Services;
+using GitViewer.Api.Services.Interfaces;
 using GitViewer.DataAccess.Models;
 using Microsoft.AspNetCore.Mvc;
 using Moq;

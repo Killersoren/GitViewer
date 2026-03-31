@@ -1,4 +1,5 @@
-﻿using GitViewer.DataAccess.Models;
+﻿using GitViewer.Api.Services.Interfaces;
+using GitViewer.DataAccess.Models;
 using System.IO.Compression;
 
 namespace GitViewer.Api.Services

@@ -1,6 +1,5 @@
 ﻿using GitViewer.Api.Dto;
-using GitViewer.Api.RabbitMQ;
-using GitViewer.Api.Services;
+using GitViewer.Api.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 

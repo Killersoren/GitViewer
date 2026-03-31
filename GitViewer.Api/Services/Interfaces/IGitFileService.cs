@@ -1,4 +1,4 @@
-﻿namespace GitViewer.Api.Services
+﻿namespace GitViewer.Api.Services.Interfaces
 {
     public interface IGitFileService
     {

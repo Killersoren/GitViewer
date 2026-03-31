@@ -1,6 +1,7 @@
 ﻿using GitViewer.Api.Dto;
 using GitViewer.Api.Helpers;
 using GitViewer.Api.RabbitMQ;
+using GitViewer.Api.Services.Interfaces;
 using GitViewer.DataAccess.Models;
 
 namespace GitViewer.Api.Services
@@ -112,6 +113,33 @@ namespace GitViewer.Api.Services
             }
         }
 
+        public async Task LogRepositoryViewedAsyncWithShareLink(Repository repo, ShareLink shareLink, Guid? viewerId, string clientIp)
+        {
+            if (!_rateLimiter.CanSendLog(viewerId, repo.Id, "RepositoryViewed", clientIp))
+                return;
+            try
+            {
+                var logDto = new LogDto
+                {
+                    EventType = "RepositoryViewed",
+                    EntityType = "Repository",
+                    EntityName = repo.Name,
+                    EntityId = repo.Id,
+                    UserId = null, // Always null for anonymity
+                    Timestamp = DateTime.UtcNow,
+                    ShareLink = shareLink.Id,
+                    Details = $"RepositoryOwner:{repo.UserId}"
+                };
+
+                var logMessage = logDto.CreateLogMessage();
+                await _messageProducer.SendMessage(logMessage);
+            }
+            catch (Exception ex)
+            {
+                Console.Error.WriteLine($"Failed to log repository viewed: {ex.Message}");
+            }
+        }
+
         public async Task LogPublicReposViewedAsync(User user, Guid? viewerId, string clientIp)
         {
             if (!_rateLimiter.CanSendLog(viewerId, user.Id, "PublicReposViewed", clientIp))
@@ -158,6 +186,79 @@ namespace GitViewer.Api.Services
             catch (Exception ex)
             {
                 Console.Error.WriteLine($"Failed to log account created: {ex.Message}");
+            }
+        }
+
+        public async Task LogShareLinkViewedAsync(ShareLink shareLink, Guid? requesterId, string clientIp)
+        {
+            if (!_rateLimiter.CanSendLog(requesterId, shareLink.Id, "ShareLinkViewed", clientIp))
+                return;
+
+            try
+            {
+                var logDto = new LogDto
+                {
+                    EventType = "ShareLinkViewed",
+                    EntityType = "ShareLink",
+                    EntityName = shareLink.Name,
+                    EntityId = shareLink.Id,
+                    Timestamp = DateTime.UtcNow,
+                    Details = $"ShareLinkOwner:{shareLink.UserId}",
+                    ShareLink = shareLink.Id
+                };
+
+                var logMessage = logDto.CreateLogMessage();
+                await _messageProducer.SendMessage(logMessage);
+            }
+            catch (Exception ex)
+            {
+                Console.Error.WriteLine($"Failed to log public repos viewed from sharelink: {ex.Message}");
+            }
+        }
+
+        public async Task LogShareLinkDeletedAsync(ShareLink shareLink, Guid userId)
+        {
+            try
+            {
+                var logDto = new LogDto
+                {
+                    EventType = "ShareLinkDeleted",
+                    EntityType = "ShareLink",
+                    EntityName = shareLink.Name,
+                    EntityId = shareLink.Id,
+                    UserId = userId,
+                    Timestamp = DateTime.UtcNow
+                };
+
+                var logMessage = logDto.CreateLogMessage();
+                await _messageProducer.SendMessage(logMessage);
+            }
+            catch (Exception ex)
+            {
+                Console.Error.WriteLine($"Failed to log repository deleted: {ex.Message}");
+            }
+        }
+
+        public async Task LogShareLinkCreatedAsync(ShareLink shareLink, Guid userId)
+        {
+            try
+            {
+                var logDto = new LogDto
+                {
+                    EventType = "ShareLinkCreated",
+                    EntityType = "ShareLink",
+                    EntityName = shareLink.Name,
+                    EntityId = shareLink.Id,
+                    UserId = userId,
+                    Timestamp = DateTime.UtcNow
+                };
+
+                var logMessage = logDto.CreateLogMessage();
+                await _messageProducer.SendMessage(logMessage);
+            }
+            catch (Exception ex)
+            {
+                Console.Error.WriteLine($"Failed to log repository deleted: {ex.Message}");
             }
         }
     }

@@ -1,6 +1,7 @@
 ﻿using FluentResults;
 using GitViewer.Api.Dto;
 using GitViewer.Api.Helpers;
+using GitViewer.Api.Services.Interfaces;
 using GitViewer.DataAccess.Models;
 using Microsoft.EntityFrameworkCore;
 
@@ -37,7 +38,7 @@ namespace GitViewer.Api.Services
 
             if (!repo.IsPublic && repo.UserId != requesterId.Value)
             {
-                    return Result.Fail("Forbidden");
+                return Result.Fail("Forbidden");
             }
 
             bool isOwner = repo.UserId == requesterId;
@@ -47,6 +48,39 @@ namespace GitViewer.Api.Services
                 await _loggingService.LogRepositoryViewedAsync(repo, requesterId, clientIp);
             }
 
+            return Result.Ok(repo);
+        }
+
+        public async Task<Result<Repository>> GetRepoAsyncWithShareLink(Guid shareLink, Guid repoId, Guid? requesterId, string clientIp)
+        {
+            var repo = await _context.Repository.FindAsync(repoId);
+            if (repo is null)
+            {
+                return Result.Fail("Repo not found");
+            }
+
+            if (!repo.IsPublic && !requesterId.HasValue)
+            {
+                return Result.Fail("Unauthorized");
+            }
+
+            if (!repo.IsPublic && repo.UserId != requesterId.Value)
+            {
+                return Result.Fail("Forbidden");
+            }
+
+            var shareLinkEntity = await _context.ShareLinks
+                .AsNoTracking()
+                .FirstOrDefaultAsync(s => s.Id == shareLink);
+            if (shareLinkEntity is null || shareLinkEntity.UserId != repo.UserId)
+            {
+                return Result.Fail("Invalid share link");
+            }
+            bool isOwner = repo.UserId == requesterId;
+            if (!isOwner)
+            {
+                await _loggingService.LogRepositoryViewedAsyncWithShareLink(repo, shareLinkEntity, requesterId, clientIp);
+            }
             return Result.Ok(repo);
         }
 
@@ -259,6 +293,33 @@ namespace GitViewer.Api.Services
                 .ToListAsync();
 
             return Result.Ok(repos.AsEnumerable());
+        }
+
+        public async Task<Result<IAsyncEnumerable<Repository>>> GetUserReposFromShareLinkAsync(Guid shareLinkId, Guid? requesterId, string clientIp)
+        {
+            var shareLink = await _context.ShareLinks
+                .AsNoTracking()
+                .FirstOrDefaultAsync(s => s.Id == shareLinkId);
+
+            var userId = shareLink?.UserId;
+
+            if (shareLinkId == Guid.Empty || shareLink is null)
+            {
+                return Result.Fail("Share link not found");
+            }
+
+            var repos = _context.Repository
+                .Where(r => r.UserId == userId && r.IsPublic)
+                .AsNoTracking()
+                .AsAsyncEnumerable();
+
+            bool isOwner = requesterId.HasValue && shareLinkId == requesterId.Value;
+            if (!isOwner)
+            {
+                await _loggingService.LogShareLinkViewedAsync(shareLink, requesterId, clientIp);
+            }
+
+            return Result.Ok(repos);
         }
     }
 }

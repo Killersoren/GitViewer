@@ -3,6 +3,7 @@ using System;
 using GitViewer.DataAccess.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace GitViewer.DataAccess.Migrations
 {
     [DbContext(typeof(GitViewerServiceContext))]
-    partial class GitViewerServiceContextModelSnapshot : ModelSnapshot
+    [Migration("20260331190056_AddShareLink")]
+    partial class AddShareLink
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

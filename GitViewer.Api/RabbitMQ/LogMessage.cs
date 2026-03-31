@@ -11,5 +11,6 @@
         public string? Details { get; set; }
 
         public DateTime Timestamp { get; set; }
+        public Guid? ShareLink { get; set; }
     }
 }

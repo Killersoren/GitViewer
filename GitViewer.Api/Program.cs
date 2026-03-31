@@ -1,7 +1,6 @@
-
-
 using GitViewer.Api.RabbitMQ;
 using GitViewer.Api.Services;
+using GitViewer.Api.Services.Interfaces;
 using GitViewer.DataAccess.Models;
 using Lucene.Net.Support;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -28,7 +27,9 @@ namespace GitViewer.Api
             builder.Services.AddScoped<IAuthService, AuthService>();
             builder.Services.AddScoped<IRepositoryService, RepositoryService>();
             builder.Services.AddScoped<ILoggingService, LoggingService>();
-
+            builder.Services.AddScoped<IShareLinkService, ShareLinkService>();
+            builder.Services.AddScoped<IUserService, UserService>();
+            builder.Services.AddHttpContextAccessor();
             builder.Services.Configure<RabbitMQSettings>(builder.Configuration.GetSection("RabbitMQ"));
 
             builder.Services.AddMemoryCache();

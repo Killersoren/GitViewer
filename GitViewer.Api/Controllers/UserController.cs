@@ -1,5 +1,4 @@
-﻿using GitViewer.Api.RabbitMQ;
-using GitViewer.DataAccess.Models;
+﻿using GitViewer.DataAccess.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
@@ -11,13 +10,11 @@ namespace GitViewer.Api.Controllers
     public class UserController : ControllerBase
     {
         private readonly GitViewerServiceContext _context;
-        private readonly IMessageProducer _messageProducer;
-        private readonly IGitRepoManager _gitManager;
 
-        public UserController(GitViewerServiceContext context, IMessageProducer messageProducer)
+
+        public UserController(GitViewerServiceContext context)
         {
             _context = context;
-            _messageProducer = messageProducer;
         }
 
         [Authorize(Roles = "user,admin")]
@@ -45,7 +42,7 @@ namespace GitViewer.Api.Controllers
             {
                 if (ownerIdClaim is null)
                 {
-                    return Unauthorized("User user is not public");
+                    return Unauthorized("User is not public");
                 }
 
                 userId = Guid.Parse(ownerIdClaim.Value);
@@ -57,6 +54,18 @@ namespace GitViewer.Api.Controllers
             }
 
             return Ok(user.UserName);
+        }
+
+        [HttpGet("get-userid-from-Sharelink")]
+        public async Task<ActionResult<Guid>> GetUserIdShareLink(Guid shareLinkId)
+        {
+            var shareLink = await _context.ShareLinks.FindAsync(shareLinkId);
+            if (shareLink is null)
+            {
+                return NotFound("Sharelink does not exist");
+            }
+
+            return Ok(shareLink.UserId);
         }
     }
 }

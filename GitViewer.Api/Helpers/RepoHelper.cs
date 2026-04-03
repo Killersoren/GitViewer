@@ -23,5 +23,21 @@ namespace GitViewer.Api.Helpers
             return logMessage;
         }
 
+        public static string GetClientIpAddress(this HttpContext context)
+        {
+            if (context.Request.Headers.TryGetValue("CF-Connecting-IP", out var cfIp))
+            {
+                return cfIp.ToString();
+            }
+
+            var ip = context.Connection.RemoteIpAddress;
+
+            if (ip?.IsIPv4MappedToIPv6 == true)
+            {
+                ip = ip.MapToIPv4();
+            }
+
+            return ip?.ToString() ?? "unknown";
+        }
     }
 }

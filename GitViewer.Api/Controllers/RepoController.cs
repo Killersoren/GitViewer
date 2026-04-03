@@ -1,5 +1,6 @@
 ﻿using FluentResults;
 using GitViewer.Api.Dto;
+using GitViewer.Api.Helpers;
 using GitViewer.Api.Services.Interfaces;
 using GitViewer.DataAccess.Models;
 using Microsoft.AspNetCore.Authorization;
@@ -45,8 +46,7 @@ namespace GitViewer.Api.Controllers
         public async Task<ActionResult<IAsyncEnumerable<Repository>>> GetAllPublicUserRepos(Guid userId)
         {
             var requesterId = _userService.TryGetOptionalUserId();
-
-            var clientIp = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+            var clientIp = HttpContext.GetClientIpAddress();
 
             var result = await _repositoryService.GetPublicReposAsync(userId, requesterId, clientIp);
 
@@ -69,7 +69,7 @@ namespace GitViewer.Api.Controllers
         public async Task<ActionResult<string>> GetUserReposFromShareLink(Guid shareLinkId)
         {
             var requesterId = _userService.TryGetOptionalUserId();
-            var clientIp = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+            var clientIp = HttpContext.GetClientIpAddress();
 
             var result = await _repositoryService.GetUserReposFromShareLinkAsync(shareLinkId, requesterId, clientIp);
             if (result.IsFailed)
@@ -87,14 +87,14 @@ namespace GitViewer.Api.Controllers
 
         [AllowAnonymous]
         [HttpGet("get-single-repo")]
-        public async Task<ActionResult<Repository>> GetRepo(Guid repoId, Guid? userShareLink)
+        public async Task<ActionResult<Repository>> GetRepo(Guid repoId, Guid? shareLinkId)
         {
             var requesterId = _userService.TryGetOptionalUserId();
-            var clientIp = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+            var clientIp = HttpContext.GetClientIpAddress();
 
-            if (userShareLink.HasValue)
+            if (shareLinkId.HasValue)
             {
-                var shareLinkResult = await _repositoryService.GetUserReposFromShareLinkAsync(userShareLink.Value, requesterId, clientIp);
+                var shareLinkResult = await _repositoryService.GetUserReposFromShareLinkAsync(shareLinkId.Value, requesterId, clientIp);
                 if (shareLinkResult.IsFailed)
                 {
                     return shareLinkResult.Errors.First().Message switch
@@ -109,9 +109,9 @@ namespace GitViewer.Api.Controllers
 
             Result<Repository> result;
 
-            if (userShareLink.HasValue)
+            if (shareLinkId.HasValue)
             {
-                result = await _repositoryService.GetRepoAsyncWithShareLink(userShareLink.Value, repoId, requesterId, clientIp);
+                result = await _repositoryService.GetRepoAsyncWithShareLink(shareLinkId.Value, repoId, requesterId, clientIp);
             }
 
             else
@@ -219,7 +219,7 @@ namespace GitViewer.Api.Controllers
         {
             var currentUserId = _userService.GetRequiredUserId();
 
-            var clientIp = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+            var clientIp = HttpContext.GetClientIpAddress();
 
             // Check repo access
             var repoResult = await _repositoryService.GetRepoAsync(repoId, currentUserId, clientIp);

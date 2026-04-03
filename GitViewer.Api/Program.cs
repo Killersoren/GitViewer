@@ -4,6 +4,7 @@ using GitViewer.Api.Services.Interfaces;
 using GitViewer.DataAccess.Models;
 using Lucene.Net.Support;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
@@ -133,6 +134,16 @@ namespace GitViewer.Api
                 app.UseSwagger();
                 app.UseSwaggerUI();
             }
+
+            var options = new ForwardedHeadersOptions
+            {
+                ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
+            };
+
+            options.KnownNetworks.Clear();
+            options.KnownProxies.Clear();
+
+            app.UseForwardedHeaders(options);
 
             app.UseHttpsRedirection();
 

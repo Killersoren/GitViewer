@@ -2,6 +2,6 @@
 {
     public interface ILogRateLimiter
     {
-        bool CanSendLog(Guid? userId, Guid entityId, string eventType, string clientIdentifier);
+        bool CanSendLog(Guid? userId, Guid entityId, string eventType, string clientIdentifier, Guid? shareLinkId);
     }
 }

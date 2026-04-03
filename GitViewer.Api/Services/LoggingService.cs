@@ -88,7 +88,7 @@ namespace GitViewer.Api.Services
 
         public async Task LogRepositoryViewedAsync(Repository repo, Guid? viewerId, string clientIp)
         {
-            if (!_rateLimiter.CanSendLog(viewerId, repo.Id, "RepositoryViewed", clientIp))
+            if (!_rateLimiter.CanSendLog(viewerId, repo.Id, "RepositoryViewed", clientIp, null))
                 return;
 
             try
@@ -115,7 +115,7 @@ namespace GitViewer.Api.Services
 
         public async Task LogRepositoryViewedAsyncWithShareLink(Repository repo, ShareLink shareLink, Guid? viewerId, string clientIp)
         {
-            if (!_rateLimiter.CanSendLog(viewerId, repo.Id, "RepositoryViewed", clientIp))
+            if (!_rateLimiter.CanSendLog(viewerId, repo.Id, "RepositoryViewed", clientIp, shareLink.Id)) // Fix det her så sharelink også tages i betragtning for rate limiting
                 return;
             try
             {
@@ -142,7 +142,7 @@ namespace GitViewer.Api.Services
 
         public async Task LogPublicReposViewedAsync(User user, Guid? viewerId, string clientIp)
         {
-            if (!_rateLimiter.CanSendLog(viewerId, user.Id, "PublicReposViewed", clientIp))
+            if (!_rateLimiter.CanSendLog(viewerId, user.Id, "PublicReposViewed", clientIp, null))
                 return;
 
             try
@@ -191,7 +191,7 @@ namespace GitViewer.Api.Services
 
         public async Task LogShareLinkViewedAsync(ShareLink shareLink, Guid? requesterId, string clientIp)
         {
-            if (!_rateLimiter.CanSendLog(requesterId, shareLink.Id, "ShareLinkViewed", clientIp))
+            if (!_rateLimiter.CanSendLog(requesterId, shareLink.Id, "ShareLinkViewed", clientIp, null))
                 return;
 
             try

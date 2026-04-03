@@ -13,7 +13,7 @@ namespace GitViewer.Api.Services
             _cache = cache;
         }
 
-        public bool CanSendLog(Guid? userId, Guid entityId, string eventType, string clientIdentifier)
+        public bool CanSendLog(Guid? userId, Guid entityId, string eventType, string clientIdentifier, Guid? shareLinkId)
         {
             var cacheKey = $"{eventType}:{entityId}:{userId?.ToString() ?? clientIdentifier}";
 

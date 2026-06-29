@@ -26,7 +26,7 @@ The service is built using **ASP.NET Core** and **Entity Framework Core**.
 
 ### Requirements
 
-* .NET 9 SDK
+* .NET 10 SDK
 * Docker
 
 ### Running the program locally

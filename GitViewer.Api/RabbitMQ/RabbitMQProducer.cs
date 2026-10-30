@@ -43,7 +43,7 @@ namespace GitViewer.Api.RabbitMQ
             _channel = await _connection.CreateChannelAsync();
             await _channel.QueueDeclareAsync(
                 queue: "logs",
-                durable: false,
+                durable: true,
                 exclusive: false,
                 autoDelete: false,
                 arguments: null

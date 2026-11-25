@@ -313,7 +313,7 @@ namespace GitViewer.Api.Services
                 .AsNoTracking()
                 .AsAsyncEnumerable();
 
-            bool isOwner = requesterId.HasValue && shareLinkId == requesterId.Value;
+            bool isOwner = requesterId.HasValue && shareLink.UserId == requesterId.Value;
             if (!isOwner)
             {
                 await _loggingService.LogShareLinkViewedAsync(shareLink, requesterId, clientIp);
